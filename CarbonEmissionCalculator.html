@@ -4,32 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CO2 Emissions Calculator with Graph</title>
+    <!-- Link to external stylesheet -->
     <link rel="stylesheet" href="style.css">
+    <!-- Including Chart.js library for graphing -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Function to get coordinates from Nominatim API
+        // Function to get coordinates from the Nominatim API using OpenStreetMap
         function getCoordinates(address, callback) {
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
             
+            // Fetch data from Nominatim API
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
-                        const lat = parseFloat(data[0].lat);
-                        const lon = parseFloat(data[0].lon);
-                        callback(lat, lon);
+                        const lat = parseFloat(data[0].lat); // Latitude of the first result
+                        const lon = parseFloat(data[0].lon); // Longitude of the first result
+                        callback(lat, lon); // Call the callback function with the coordinates
                     } else {
-                        alert("Address not found!");
+                        alert("Address not found!"); // Alert if address is not found
                     }
                 })
-                .catch(error => alert("Error fetching coordinates: " + error));
+                .catch(error => alert("Error fetching coordinates: " + error)); // Error handling
         }
 
-        // Calculate the distance between two points using Haversine formula
+        // Calculate the distance between two points using the Haversine formula
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Radius of the Earth in km
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const R = 6371; // Radius of the Earth in kilometers
+            const dLat = (lat2 - lat1) * Math.PI / 180; // Difference in latitude
+            const dLon = (lon2 - lon1) * Math.PI / 180; // Difference in longitude
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                       Math.sin(dLon / 2) * Math.sin(dLon / 2);
@@ -37,27 +40,29 @@
             return R * c; // Distance in kilometers
         }
 
-        // Calculate CO2 emissions based on distance and transport type
+        // Main function to calculate CO2 emissions based on user input
         function calculateCO2Emissions() {
+            // Get values from user input fields
             const startAddress = document.getElementById('startAddress').value;
             const endAddress = document.getElementById('endAddress').value;
             const transportType = document.getElementById('transportType').value;
 
-            // Fetch coordinates for both addresses
+            // Fetch coordinates for both start and end addresses
             getCoordinates(startAddress, (lat1, lon1) => {
                 getCoordinates(endAddress, (lat2, lon2) => {
-                    const distance = calculateDistance(lat1, lon1, lat2, lon2); // Distance in km
-                    const emissions = estimateEmissions(distance, transportType); // Estimate CO2 emissions
+                    const distance = calculateDistance(lat1, lon1, lat2, lon2); // Get the distance between the two points
+                    const emissions = estimateEmissions(distance, transportType); // Estimate CO2 emissions based on distance and transport type
                     document.getElementById('result').innerText = `Distance: ${distance.toFixed(2)} km\nEstimated CO2 emissions: ${emissions.toFixed(2)} kg`;
-                    plotGraph(emissions);
+                    plotGraph(emissions); // Plot the emissions data on a graph
                 });
             });
         }
 
-        // Estimate CO2 emissions based on transportation type and distance
+        // Function to estimate CO2 emissions based on the type of transportation
         function estimateEmissions(distance, transportType) {
             let emissionsPerKm;
 
+            // Set emissions per kilometer for each transportation type
             switch (transportType) {
                 case 'Car':
                     emissionsPerKm = 0.2; // 0.2 kg of CO2 per km for a car
@@ -69,26 +74,26 @@
                     emissionsPerKm = 0; // 0 kg of CO2 per km for a bike
                     break;
                 default:
-                    emissionsPerKm = 0.1; // Default to car if not specified
+                    emissionsPerKm = 0.1; // Default to car if transport type is unknown
             }
 
-            return distance * emissionsPerKm;
+            return distance * emissionsPerKm; // Calculate total emissions
         }
 
-        // Plotting the result on a graph
+        // Function to plot the results on a bar chart
         function plotGraph(userEmissions) {
-            // Define average emissions (this can be dynamically calculated based on other data)
-            const averageEmissions = 3.6; // Example average CO2 emissions in kg
-            const percentageBetter = ((averageEmissions - userEmissions) / averageEmissions) * 100;
+            // Example of average emissions (can be dynamically set based on your data)
+            const averageEmissions = 3.6; // Average CO2 emissions in kg per day (example value)
+            const percentageBetter = ((averageEmissions - userEmissions) / averageEmissions) * 100; // Calculate percentage better than average
 
-            // Ensure the percentage is a positive number
+            // Ensure that the percentage is a positive number
             const formattedPercentage = percentageBetter > 0 ? percentageBetter.toFixed(2) : 0;
 
+            // Update the result text
             document.getElementById('result').innerText = `Your emissions are ${userEmissions.toFixed(2)} kg per day. The average is ${averageEmissions} kg per day.`;
             document.getElementById('result').innerText += `\nYou are ${formattedPercentage}% better than the average!`;
 
-
-            // Chart data
+            // Define chart data for the bar chart
             const data = {
                 labels: ['Your Emissions', 'Average Emissions'],
                 datasets: [{
@@ -107,13 +112,13 @@
                 options: {
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true // Ensure the y-axis starts from 0
                         }
                     }
                 }
             };
 
-            // Create the chart
+            // Create the chart on the canvas element
             const ctx = document.getElementById('emissionsChart').getContext('2d');
             new Chart(ctx, config);
         }
@@ -121,17 +126,19 @@
 </head>
 <body>
     <h1>CO2 Emissions Calculator</h1>
+    <!-- User input for starting address -->
     <label for="startAddress">Start Address:</label>
     <input type="text" id="startAddress" placeholder="Enter starting address" required>
     
     <br><br>
     
-
+    <!-- User input for destination address -->
     <label for="endAddress">End Address:</label>
     <input type="text" id="endAddress" placeholder="Enter destination address" required>
     
     <br><br>
 
+    <!-- Dropdown for selecting the transport type -->
     <label for="transportType">Transport Type:</label>
     <select id="transportType">
         <option value="Car">Car</option>
@@ -141,11 +148,14 @@
     
     <br><br>
 
+    <!-- Button to trigger the emissions calculation -->
     <button onclick="calculateCO2Emissions()">Calculate Emissions</button>
 
+    <!-- Displaying the result of the emissions calculation -->
     <h2>Results:</h2>
     <pre id="result"></pre>
 
+    <!-- Canvas for the emissions comparison chart -->
     <h2>CO2 Emissions Comparison:</h2>
     <canvas id="emissionsChart" width="300" height="100"></canvas>
 
